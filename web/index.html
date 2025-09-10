@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reddit PhotoshopRequest Monitor</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Settings Card -->
+        <div class="card settings-card">
+            <div class="header">
+                <h2 class="title">Settings</h2>
+                <div class="status-dot" id="statusDot"></div>
+            </div>
+            
+            <div class="input-group">
+                <label class="label">Subreddit</label>
+                <input type="text" class="input" id="subredditInput" value="PhotoshopRequest" placeholder="Enter subreddit name">
+            </div>
+            
+            <div class="input-group">
+                <label class="label">Poll Interval (seconds)</label>
+                <input type="number" class="input" id="intervalInput" value="60" min="10" max="3600">
+            </div>
+            
+            <div class="input-group">
+                <label class="label">Download Directory</label>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" class="input" id="downloadDirInput" value="./downloads/" placeholder="Download path" style="flex: 1;">
+                    <button class="button secondary" onclick="selectDownloadFolder()" style="width: auto; padding: 12px 16px;">Browse</button>
+                </div>
+            </div>
+            
+            <button class="button" id="startStopBtn" onclick="toggleMonitoring()">Start Monitoring</button>
+            
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-number" id="totalPosts">0</div>
+                    <div class="stat-label">Total Posts</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="totalDownloads">0</div>
+                    <div class="stat-label">Downloads</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="paidPosts">0</div>
+                    <div class="stat-label">Paid Posts</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="freePosts">0</div>
+                    <div class="stat-label">Free Posts</div>
+                </div>
+            </div>
+            
+            <button class="button secondary" onclick="showAnalytics()" style="margin-top: 16px;">
+                📊 View Analytics
+            </button>
+        </div>
+
+        <!-- Enhanced Monitor Card -->
+        <div class="card monitor-card">
+            <div class="header">
+                <h2 class="title">Live Feed - r/<span id="currentSubreddit">PhotoshopRequest</span></h2>
+                <span id="lastUpdate" style="font-size: 12px; color: #94a3b8;">Never</span>
+            </div>
+            
+            <!-- Controls Section -->
+            <div class="monitor-controls">
+                <div class="control-group">
+                    <label class="control-label">Sort Posts:</label>
+                    <select class="control-select" id="sortSelect" onchange="applySorting()">
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="most_upvoted">Most Upvoted</option>
+                        <option value="least_upvoted">Least Upvoted</option>
+                        <option value="paid_first">Paid Posts First</option>
+                        <option value="free_first">Free Posts First</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">Show Posts:</label>
+                    <select class="control-select" id="postLimitSelect" onchange="applyPostLimit()">
+                        <option value="5">5 posts</option>
+                        <option value="10" selected>10 posts</option>
+                        <option value="15">15 posts</option>
+                        <option value="20">20 posts</option>
+                        <option value="25">25 posts</option>
+                        <option value="50">50 posts</option>
+                        <option value="100">100 posts</option>
+                        <option value="all">All posts</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <button class="control-button" onclick="refreshPosts()" title="Refresh posts from Reddit">
+                        🔄 Refresh
+                    </button>
+                </div>
+            </div>
+            
+            <div class="posts-container" id="postsContainer">
+                <div style="text-align: center; color: #64748b; padding: 40px;">
+                    <div style="font-size: 48px; margin-bottom: 16px;">📡</div>
+                    <div>Start monitoring to see new posts</div>
+                </div>
+            </div>
+            
+            <!-- Posts Counter -->
+            <div class="posts-counter">
+                <span id="postsCounter">Showing 0 of 0 posts</span>
+            </div>
+        </div>
+
+        <!-- FIXED: Enhanced Logs Card with Expand/Collapse -->
+        <div class="card logs-card">
+            <div class="logs-header">
+                <div class="logs-header-left">
+                    <h2 class="title">Activity Logs</h2>
+                </div>
+                <div class="logs-header-right">
+                    <button class="expand-logs-btn" id="expandLogsBtn" onclick="toggleLogsExpansion()" title="Expand logs view">
+                        📈 Expand
+                    </button>
+                    <button class="clear-logs-btn" onclick="confirmClearLogs()" title="Clear Logs">
+                        🗑️
+                    </button>
+                </div>
+            </div>
+            
+            <div class="log-area" id="logArea">
+                <div class="log-entry">
+                    <span class="log-timestamp">[Ready]</span> 
+                    <span class="log-info">Reddit Monitor initialized. Click "Start Monitoring" to begin.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Download Card -->
+        <div class="card download-card">
+            <div class="header">
+                <h2 class="title">Manual Download</h2>
+            </div>
+            
+            <div class="input-group">
+                <label class="label">Reddit Post URL</label>
+                <input type="text" class="input" id="urlInput" placeholder="https://reddit.com/r/PhotoshopRequest/...">
+            </div>
+            
+            <button class="button success" onclick="downloadFromUrl()" id="downloadBtn">Download Images</button>
+            
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            
+            <div id="downloadStatus" style="margin-top: 12px; font-size: 14px; color: #94a3b8;"></div>
+        </div>
+    </div>
+
+    <!-- Analytics Modal -->
+    <div class="modal-overlay" id="analyticsModalOverlay" onclick="closeAnalyticsModal()">
+        <div class="modal-content analytics-modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h2 class="modal-title">📊 Posts Analytics Dashboard</h2>
+                <button class="close-btn" onclick="closeAnalyticsModal()">×</button>
+            </div>
+            
+            <div class="modal-body">
+                <!-- Summary Stats -->
+                <div class="analytics-grid">
+                    <div class="analytics-card">
+                        <h3>📈 Overview</h3>
+                        <div class="analytics-stats">
+                            <div class="analytics-stat">
+                                <span class="analytics-label">Total Posts Analyzed:</span>
+                                <span class="analytics-value" id="analyticsTotal">0</span>
+                            </div>
+                            <div class="analytics-stat">
+                                <span class="analytics-label">Average Daily Posts:</span>
+                                <span class="analytics-value" id="analyticsDaily">0</span>
+                            </div>
+                            <div class="analytics-stat">
+                                <span class="analytics-label">Most Active Hour:</span>
+                                <span class="analytics-value" id="analyticsPeakHour">--</span>
+                            </div>
+                            <div class="analytics-stat">
+                                <span class="analytics-label">Most Active Day:</span>
+                                <span class="analytics-value" id="analyticsPeakDay">--</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="analytics-card">
+                        <h3>💰 Request Types</h3>
+                        <div class="analytics-stats">
+                            <div class="analytics-stat">
+                                <span class="analytics-label">Paid Requests:</span>
+                                <span class="analytics-value paid" id="analyticsPaid">0 (0%)</span>
+                            </div>
+                            <div class="analytics-stat">
+                                <span class="analytics-label">Free Requests:</span>
+                                <span class="analytics-value free" id="analyticsFree">0 (0%)</span>
+                            </div>
+                            <div class="analytics-stat">
+                                <span class="analytics-label">Other:</span>
+                                <span class="analytics-value" id="analyticsOther">0 (0%)</span>
+                            </div>
+                            <div class="analytics-stat">
+                                <span class="analytics-label">Revenue Ratio:</span>
+                                <span class="analytics-value" id="analyticsRatio">1:0</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="analytics-card">
+                        <h3>🔍 Content Analysis</h3>
+                        <div class="analytics-stats">
+                            <div class="analytics-stat">
+                                <span class="analytics-label">Avg Title Length:</span>
+                                <span class="analytics-value" id="analyticsAvgTitle">0 chars</span>
+                            </div>
+                            <div class="analytics-stat">
+                                <span class="analytics-label">Avg Description:</span>
+                                <span class="analytics-value" id="analyticsAvgDesc">0 chars</span>
+                            </div>
+                            <div class="analytics-stat">
+                                <span class="analytics-label">Avg Upvotes:</span>
+                                <span class="analytics-value" id="analyticsAvgUpvotes">0</span>
+                            </div>
+                            <div class="analytics-stat">
+                                <span class="analytics-label">Paid vs Free Engagement:</span>
+                                <span class="analytics-value" id="analyticsEngagement">--</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="analytics-card">
+                        <h3>⏰ Activity Patterns</h3>
+                        <div class="analytics-stats">
+                            <div class="analytics-stat">
+                                <span class="analytics-label">Busiest Hour:</span>
+                                <span class="analytics-value" id="analyticsBusiestHour">--</span>
+                            </div>
+                            <div class="analytics-stat">
+                                <span class="analytics-label">Quietest Hour:</span>
+                                <span class="analytics-value" id="analyticsQuietestHour">--</span>
+                            </div>
+                            <div class="analytics-stat">
+                                <span class="analytics-label">Weekend vs Weekday:</span>
+                                <span class="analytics-value" id="analyticsWeekendRatio">--</span>
+                            </div>
+                            <div class="analytics-stat">
+                                <span class="analytics-label">Prime Time (6PM-10PM):</span>
+                                <span class="analytics-value" id="analyticsPrimeTime">--</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Charts Section -->
+                <div class="charts-section">
+                    <h3>📊 Visual Analytics</h3>
+                    
+                    <!-- Hourly Activity Chart -->
+                    <div class="chart-container">
+                        <h4>⏰ Hourly Activity Pattern</h4>
+                        <div class="chart-wrapper">
+                            <div id="hourlyChart"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Post Types Pie Chart -->
+                    <div class="chart-container">
+                        <h4>💰 Request Type Distribution</h4>
+                        <div class="chart-wrapper">
+                            <div id="typeChart"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Weekly Pattern Chart -->
+                    <div class="chart-container">
+                        <h4>📅 Weekly Activity Pattern</h4>
+                        <div class="chart-wrapper">
+                            <div id="weeklyChart"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Posting Trends Chart -->
+                    <div class="chart-container">
+                        <h4>📈 Daily Posting Trends</h4>
+                        <div class="chart-wrapper">
+                            <div id="trendsChart"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Top Authors -->
+                <div class="analytics-card">
+                    <h3>👥 Top Contributors</h3>
+                    <div id="topAuthors" class="top-authors-list">
+                        <div class="author-item">
+                            <span>Loading...</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="analytics-note">
+                    <p><strong>📈 Analytics Info:</strong> Data collected from <span id="analyticsSource">--</span> posts. Analytics are automatically updated and saved to <code>posts_analytics.log</code>. Charts show posting patterns, request types, and engagement metrics to help optimize your PhotoshopRequest workflow.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Post Details Modal -->
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h2 class="modal-title">Post Details</h2>
+                <button class="close-btn" onclick="closeModal()">×</button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="post-detail-section">
+                    <div class="detail-row">
+                        <span class="detail-label">Flair:</span>
+                        <span class="flair-badge" id="modalFlair">Free</span>
+                    </div>
+                    
+                    <div class="detail-row">
+                        <span class="detail-label">Posted:</span>
+                        <span class="detail-value" id="modalDate">Just now</span>
+                    </div>
+                    
+                    <div class="detail-row">
+                        <span class="detail-label">Author:</span>
+                        <span class="detail-value" id="modalAuthor">u/username</span>
+                    </div>
+                    
+                    <div class="detail-row">
+                        <span class="detail-label">Upvotes:</span>
+                        <span class="detail-value" id="modalUpvotes">0</span>
+                    </div>
+                </div>
+                
+                <div class="post-detail-section">
+                    <h3 class="section-title" id="modalTitle">Post Title</h3>
+                </div>
+                
+                <div class="post-detail-section">
+                    <h4 class="section-subtitle">Description</h4>
+                    <div class="description-content" id="modalDescription">
+                        Post description will appear here...
+                    </div>
+                </div>
+                
+                <div class="post-detail-section">
+                    <h4 class="section-subtitle">Actions</h4>
+                    <div class="modal-actions">
+                        <button class="button success" onclick="downloadFromModal()">Download Images</button>
+                        <button class="button secondary" onclick="openInReddit()">Open in Reddit</button>
+                        <button class="button" onclick="togglePostCompletion()" id="modalCompletionBtn">Mark as Complete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Action Button -->
+    <button class="floating-action" onclick="selectDownloadFolder()" title="Browse Downloads Folder">
+        📁
+    </button>
+
+    <!-- External Libraries - Load ApexCharts first -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.44.0/dist/apexcharts.min.js"></script>
+    
+    <!-- Scripts - Load in correct order -->
+    <script type="text/javascript" src="/eel.js"></script>
+    
+    <!-- Core modules - load these first -->
+    <script src="main.js"></script>
+    <script src="ui-utils.js"></script>
+    <script src="persistence.js"></script>
+    
+    <!-- Feature modules - load these after core -->
+    <script src="post-management.js"></script>
+    <script src="monitoring.js"></script>
+    <script src="analytics.js"></script>
+    
+    <!-- Demo module - load last -->
+    <script src="demo.js"></script>
+</body>
+</html>
