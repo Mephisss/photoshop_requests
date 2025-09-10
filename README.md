@@ -133,8 +133,8 @@ reddit-photoshop-monitor/
 ├── .env                  # Environment variables (create this)
 ├── web/                  # Frontend web application
 │   ├── index.html        # Main HTML interface
-│   ├── styles.css        # Modern CSS styling
-│   ├── main.js          # Core application logic
+│   ├── styles.css        # CSS styling
+│   ├── main.js           # Core application logic
 │   ├── post-management.js # Post handling and sorting
 │   ├── monitoring.js     # Reddit API monitoring
 │   ├── analytics.js      # Analytics and charts
