@@ -1,62 +1,47 @@
 # Reddit PhotoshopRequest Monitor
-A modern, real-time monitoring application for tracking posts in the r/PhotoshopRequest subreddit.
+
+Real-time monitor for new posts in `r/PhotoshopRequest`, with local persistence, filtering, workflow tracking, analytics, and bulk image downloads.
 
 ![Application Screenshot](screenshot1.png)
 
-## Features
+## What it does
 
-### Real-Time Monitoring
-- **Live Post Feed**: Monitor r/PhotoshopRequest for new posts in real-time
-- **Smart Loading**: Intelligent post loading that tracks your last session
-- **Post Filtering**: Sort by newest, most upvoted, paid/free requests
-- **Completion Tracking**: Mark posts as complete and track your progress
+- Watches `r/PhotoshopRequest` for new posts on a polling interval
+- Shows a live feed with sorting and filters (newest, upvoted, paid/free)
+- Tracks completion state per post (local)
+- Downloads images from posts (single images and Reddit galleries)
+- Builds local analytics from observed posts (hour/day/week patterns, paid vs free)
 
-### Advanced Analytics
-- **Visual Dashboard**: Interactive charts showing posting patterns
-- **Activity Analysis**: Hourly, daily, and weekly posting trends
-- **Request Type Breakdown**: Paid vs Free request analytics
-- **Engagement Metrics**: Upvote patterns and author statistics
+## How it works
 
-### Automated Downloads
-- **Bulk Image Download**: Download all images from Reddit posts
-- **Gallery Support**: Handles both single images and Reddit galleries
-- **Progress Tracking**: Real-time download progress with status updates
-- **Custom Directories**: Choose your preferred download location
+- Backend: Python + PRAW polls Reddit and exposes data to the UI via Eel
+- Frontend: HTML/CSS/JS renders the feed, filters, and analytics; charts via ApexCharts
 
-### Modern UI
-- **Glassmorphism Design**: Beautiful blur effects and modern aesthetics
-- **Responsive Layout**: Works on desktop and mobile devices
-- **Dark Theme**: Easy on the eyes for long monitoring sessions
-- **Smooth Animations**: Polished interactions and transitions
+## Requirements
 
-## Installation
+- Python 3.7+
+- Reddit API credentials for a “script” app
+- Network access to Reddit
 
-### Prerequisites
-- Python 3.7 or higher
-- Reddit API credentials (see setup below)
+## Quickstart
 
-### 1. Clone the Repository
+### 1) Install
+
 ```bash
 git clone https://github.com/yourusername/reddit-photoshop-monitor.git
 cd reddit-photoshop-monitor
-```
-
-### 2. Install Dependencies
-```bash
 pip install -r requirements.txt
 ```
 
-### 3. Reddit API Setup
-1. Visit [Reddit Apps](https://www.reddit.com/prefs/apps)
-2. Click "Create App" or "Create Another App"
-3. Choose "script" as the app type
-4. Fill in the form:
-   - **Name**: Your app name (e.g., "PhotoshopRequest Monitor")
-   - **Description**: Optional description
-   - **Redirect URI**: `http://localhost:8080` (required but not used)
+### 2) Create Reddit API credentials
 
-### 4. Environment Configuration
-Create a `.env` file in the project root:
+- Create an app at Reddit preferences → apps
+- App type: `script`
+- Redirect URI: `http://localhost:8080` (required by Reddit, not used by the app)
+
+### 3) Configure environment
+
+Create `.env` in the project root:
 
 ```env
 CLIENT_ID=your_client_id_here
@@ -64,153 +49,98 @@ CLIENT_SECRET=your_client_secret_here
 USER_AGENT=script:photoshop_monitor:v1.0 (by /u/yourusername)
 ```
 
-**Where to find your credentials:**
-- `CLIENT_ID`: Located under your app name (14-character string)
-- `CLIENT_SECRET`: Labeled as "secret" in your app settings
-- `USER_AGENT`: Use the format above with your Reddit username
+Credential locations in the Reddit app page:
 
-### 5. Run the Application
+- `CLIENT_ID`: the short ID under the app name
+- `CLIENT_SECRET`: the “secret” field
+- `USER_AGENT`: identify the script and account
+
+### 4) Run
+
 ```bash
 python main.py
 ```
 
-The application will automatically open in your default browser at `http://localhost:8080`
+UI opens at `http://localhost:8080`.
 
-## Usage Guide
+## Usage
 
-### Getting Started
-1. **Configure Settings**: Set your preferred polling interval and download directory
-2. **Start Monitoring**: Click "Start Monitoring" to begin tracking new posts
-3. **View Posts**: New posts appear in real-time in the Live Feed
-4. **Download Images**: Use manual download or click posts for details
+### Feed
 
-### Key Features
+- Live updates based on polling interval
+- Filters: paid/free, sort options
+- Per-post completion toggle stored locally
 
-#### Post Management
-- **Click any post** to view detailed information in a modal
-- **Mark posts as complete** using the checkbox on each post
-- **Sort and filter** posts using the dropdown controls
-- **Refresh manually** to get the latest posts from Reddit
+### Post details
 
-#### Analytics Dashboard
-- Click **"View Analytics"** to open the comprehensive dashboard
-- View **hourly activity patterns** to find peak posting times
-- Analyze **paid vs free request ratios** for business insights
-- Track **posting trends** over time with interactive charts
+- Click a post to open a detail view (metadata + download actions)
 
-#### Download Management
-- **Automatic Detection**: Supports single images and Reddit galleries
-- **Progress Tracking**: Real-time progress bars with status updates
-- **Custom Locations**: Browse and select your preferred download folder
-- **Bulk Operations**: Download all images from multi-image posts
+### Downloads
 
-### Keyboard Shortcuts
-- `Escape`: Close modals and overlays
-- `Enter`: (in URL input) Start download
+- Supports direct images and Reddit galleries
+- Tracks progress and status
+- Saves to a configurable directory
+
+### Analytics
+
+- Hourly/daily/weekly activity breakdown based on observed posts
+- Paid vs free distribution
+- Basic engagement signals (upvotes/author counts as collected)
 
 ## Configuration
 
-### Application Settings
-- **Polling Interval**: How often to check for new posts (10-3600 seconds)
-- **Download Directory**: Where to save downloaded images
-- **Post Display Limit**: Number of posts to show (5-100 or all)
-- **Sort Options**: Various sorting methods for the post feed
+Controlled from the UI:
 
-### File Persistence
-The application automatically saves:
-- **Activity Logs**: `activity_logs.log`
-- **Analytics Data**: `posts_analytics.log`
-- **Completed Posts**: `completed_posts.json`
-- **Session State**: `last_post.json`
+- Polling interval (10–3600 seconds)
+- Download directory
+- Post display limit (5–100 or all)
+- Feed sorting and filters
 
-## Project Structure
+## Local data files
+
+Generated in the project directory:
+
+| File | Purpose |
+| --- | --- |
+| `activity_logs.log` | runtime activity log |
+| `posts_analytics.log` | aggregated analytics input data |
+| `completed_posts.json` | completion state per post |
+| `last_post.json` | last-seen post/session state |
+
+## Project layout
 
 ```
 reddit-photoshop-monitor/
-├── main.py                 # Main Python application
-├── downloader.py          # Standalone image downloader
-├── requirements.txt       # Python dependencies
-├── .env                  # Environment variables (create this)
-├── web/                  # Frontend web application
-│   ├── index.html        # Main HTML interface
-│   ├── styles.css        # CSS styling
-│   ├── main.js           # Core application logic
-│   ├── post-management.js # Post handling and sorting
-│   ├── monitoring.js     # Reddit API monitoring
-│   ├── analytics.js      # Analytics and charts
-│   ├── ui-utils.js       # UI utilities and modals
-│   ├── persistence.js    # Data persistence
-│   └── demo.js          # Demo mode functionality
-└── README.md             # This file
+├── main.py                  # App entry point
+├── downloader.py            # Download logic / helper module
+├── requirements.txt
+├── .env                     # Local secrets (not committed)
+├── web/
+│   ├── index.html
+│   ├── styles.css
+│   ├── main.js
+│   ├── post-management.js
+│   ├── monitoring.js
+│   ├── analytics.js
+│   ├── ui-utils.js
+│   ├── persistence.js
+│   └── demo.js
+└── README.md
 ```
-
-## Technology Stack
-
-### Backend
-- **Python 3.7+**: Core application logic
-- **PRAW (Python Reddit API Wrapper)**: Reddit API integration
-- **Eel**: Python-JavaScript bridge for web UI
-- **Requests**: HTTP library for image downloads
-
-### Frontend
-- **HTML5/CSS3**: Modern web standards
-- **Vanilla JavaScript**: No framework dependencies
-- **ApexCharts**: Interactive charts and visualizations
-- **Modern CSS**: Glassmorphism design with backdrop filters
 
 ## Troubleshooting
 
-### Common Issues
+- Reddit API connection failed: incorrect `.env` values, app not set to `script`, missing/invalid user agent
+- No posts loading: network failure, Reddit downtime, rate limiting, invalid subreddit scope
+- Download failed: unwritable download directory, post has no downloadable image media, gallery resolution issues
+- Charts missing: ApexCharts CDN blocked/unreachable, browser console shows script load errors
 
-**"Reddit API connection failed"**
-- Verify your `.env` file credentials
-- Check your Reddit app settings
-- Ensure you're using the correct app type (script)
+## Notes and limitations
 
-**"No posts loading"**
-- Check your internet connection
-- Verify the subreddit name is correct
-- Try refreshing the posts manually
+- Polling frequency and API rate limits constrain “real-time” behavior
+- Completion state and analytics are local to the machine running the app
+- `.env` contains secrets; keep it out of version control
 
-**"Download failed"**
-- Ensure the download directory exists and is writable
-- Check if the Reddit post contains downloadable images
-- Verify the post URL is from Reddit
+## License
 
-**Charts not displaying**
-- Ensure you have an internet connection (ApexCharts loads from CDN)
-- Try refreshing the analytics modal
-- Check browser console for JavaScript errors
-
-### Performance Tips
-- Use reasonable polling intervals (60+ seconds recommended)
-- Limit post display count for better performance
-- Clear logs periodically to free up memory
-
-## Contributing
-
-Contributions are welcome! Here's how you can help:
-
-1. **Fork the repository**
-2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
-3. **Commit your changes**: `git commit -m 'Add amazing feature'`
-4. **Push to the branch**: `git push origin feature/amazing-feature`
-5. **Open a Pull Request**
-
-### Development Setup
-```bash
-# Clone your fork
-git clone https://github.com/yourusername/reddit-photoshop-monitor.git
-
-# Install development dependencies
-pip install -r requirements.txt
-
-# Run in development mode
-python main.py
-```
-
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-
+MIT. See `LICENSE`.
