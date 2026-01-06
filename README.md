@@ -20,7 +20,7 @@ Real-time monitor for new posts in `r/PhotoshopRequest`, with local persistence,
 ## Requirements
 
 - Python 3.7+
-- Reddit API credentials for a “script” app
+- Reddit API credentials
 - Network access to Reddit
 
 ## Quickstart
@@ -35,9 +35,10 @@ pip install -r requirements.txt
 
 ### 2) Create Reddit API credentials
 
-- Create an app at Reddit preferences → apps
-- App type: `script`
-- Redirect URI: `http://localhost:8080` (required by Reddit, not used by the app)
+1. Visit [Reddit Apps](https://www.reddit.com/prefs/apps)
+2. Click "Create App" or "Create Another App"
+3. Choose "script" as the app type
+4. Fill in the form.
 
 ### 3) Configure environment
 
@@ -114,7 +115,7 @@ reddit-photoshop-monitor/
 ├── main.py                  # App entry point
 ├── downloader.py            # Download logic / helper module
 ├── requirements.txt
-├── .env                     # Local secrets (not committed)
+├── .env                     # Local
 ├── web/
 │   ├── index.html
 │   ├── styles.css
